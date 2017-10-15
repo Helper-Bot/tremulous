@@ -95,6 +95,67 @@ void Con_ToggleMenu_f( void ) {
 }
 
 /*
+===================
+Con_MessageMode_f
+===================
+-*/
+void Con_MessageMode_f (void) {
+	chat_playerNum = -1;
+	chat_team = false;
+	Field_Clear( &chatField );
+	chatField.widthInChars = 30;
+
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+====================
+Con_MessageMode2_f
+====================
+*/
+void Con_MessageMode2_f (void) {
+	chat_playerNum = -1;
+	chat_team = true;
+	Field_Clear( &chatField );
+	chatField.widthInChars = 25;
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+===================
+Con_MessageMode3_f
+===================
+*/
+void Con_MessageMode3_f (void) {
+	chat_playerNum = VM_Call( cls.cgame, CG_CROSSHAIR_PLAYER );
+	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
+		chat_playerNum = -1;
+		return;
+	}
+	chat_team = false;
+	Field_Clear( &chatField );
+	chatField.widthInChars = 30;
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+=====================
+Con_MessageMode4_f
+=====================
+*/
+void Con_MessageMode4_f (void) {
+	chat_playerNum = VM_Call( cls.cgame, CG_LAST_ATTACKER );
+	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
+		chat_playerNum = -1;
+		return;
+	}
+	chat_team = false;
+	Field_Clear( &chatField );
+	chatField.widthInChars = 30;
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
 ================
 Con_Clear_f
 ================
@@ -109,7 +170,7 @@ void Con_Clear_f (void) {
 	Con_Bottom();		// go to end
 }
 
-						
+
 /*
 ================
 Con_Dump_f
@@ -195,7 +256,7 @@ void Con_Dump_f (void)
 	FS_FCloseFile( f );
 }
 
-						
+
 /*
 ================
 Con_ClearNotify
@@ -206,7 +267,7 @@ void Con_ClearNotify( void ) {
 	CL_GameConsoleText( );
 }
 
-						
+
 
 /*
 ================
@@ -246,7 +307,7 @@ void Con_CheckResize (void)
 			numlines = con.totallines;
 
 		numchars = oldwidth;
-	
+
 		if (con.linewidth < numchars)
 			numchars = con.linewidth;
 
@@ -307,6 +368,13 @@ void Con_Init (void) {
 		historyEditLines[i].widthInChars = g_console_field_width;
 	}
 	CL_LoadConsoleHistory( );
+	if( clc.netchan.alternateProtocol == 2 )
+	{
+		Cmd_AddCommand ("messagemode", Con_MessageMode_f);
+		Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
+		Cmd_AddCommand ("messagemode3", Con_MessageMode3_f);
+		Cmd_AddCommand ("messagemode4", Con_MessageMode4_f);
+	}
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand ("togglemenu", Con_ToggleMenu_f);
@@ -370,14 +438,14 @@ void CL_ConsolePrint( const char *txt )
 		skipnotify = true;
 		txt += 12;
 	}
-	
+
 	// for some demos we don't want to ever show anything on the console
 	if ( cl_noprint && cl_noprint->integer )
 		return;
-	
+
 	if (!con.initialized) {
-		con.color[0] = 
-		con.color[1] = 
+		con.color[0] =
+		con.color[1] =
 		con.color[2] =
 		con.color[3] = 1.0f;
 		con.linewidth = -1;
@@ -560,7 +628,7 @@ static void Con_DrawSolidConsole( float frac )
 		y -= SMALLCHAR_HEIGHT;
 		rows--;
 	}
-	
+
 	row = con.display;
 
 	if ( con.x == 0 ) {
@@ -576,7 +644,7 @@ static void Con_DrawSolidConsole( float frac )
 			break;
 		if (con.current - row >= con.totallines) {
 			// past scrollback wrap point
-			continue;	
+			continue;
 		}
 
 		text = con.text + (row % con.totallines)*con.linewidth;
@@ -625,8 +693,28 @@ void Con_DrawConsole( void ) {
 
 	if( Key_GetCatcher( ) & ( KEYCATCH_UI | KEYCATCH_CGAME ) )
 		return;
-}
 
+		// draw the chat line
+	  if( clc.netchan.alternateProtocol == 2 &&
+	      Key_GetCatcher( ) & KEYCATCH_MESSAGE )
+	  {
+	    int skip;
+
+	    if( chat_team )
+	    {
+	      SCR_DrawBigString( 8, 232, "Team Say:", 1.0f, qfalse );
+	      skip = 11;
+	    }
+	    else
+	    {
+	      SCR_DrawBigString( 8, 232, "Say:", 1.0f, qfalse );
+	      skip = 5;
+	    }
+
+	    Field_BigDraw( &chatField, skip * BIGCHAR_WIDTH, 232,
+	                   SCREEN_WIDTH - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );
+									 }
+}
 //================================================================
 
 /*
@@ -642,7 +730,7 @@ void Con_RunConsole (void) {
 		con.finalFrac = MAX(0.10, 0.01 * con_height->integer);
 	else
 		con.finalFrac = 0;				// none visible
-	
+
 	// scroll towards the destination height
 	if (con.finalFrac < con.displayFrac)
 	{
