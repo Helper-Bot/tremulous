@@ -35,9 +35,9 @@ int nextHistoryLine; // the last line in the history buffer, not masked
 int historyLine;	// the line being displayed from history buffer will be <= nextHistoryLine
 
 field_t g_consoleField;
+
 field_t chatField;
 bool chat_team;
-
 int chat_playerNum;
 
 bool key_overstrikeMode;
@@ -763,7 +763,7 @@ Message_Key
 In game talk message
 =================
 */
-void Message_Key( int key ) {
+static void Message_Key( int key ) {
 
 	char		buffer[MAX_STRING_CHARS];
 
@@ -773,18 +773,23 @@ void Message_Key( int key ) {
 					return;
 	}
 
-	if ( key == K_ENTER || key == K_KP_ENTER )
-	{
-		if ( chatField.buffer[0] && clc.state == CA_ACTIVE ) {
-			if (chat_playerNum != -1 )
-
-			Com_sprintf( buffer, sizeof( buffer ), "tell %i \"%s\"\n", chat_playerNum, chatField.buffer );
-
-			else if (chat_team)
-
-			Com_sprintf( buffer, sizeof( buffer ), "say \"%s\"\n", chatField.buffer );
-
-
+	if ( key == K_ENTER || key == K_KP_ENTER ) {
+		if ( chatField.buffer[0] && clc.state == CA_ACTIVE ){
+			if (chat_playerNum != -1 ) {
+				Com_sprintf( buffer, sizeof( buffer ),
+				             "tell %i \"%s\"\n",
+										 chat_playerNum,
+										 chatField.buffer );
+			}
+			else if (chat_team) {
+				Com_sprintf( buffer, sizeof( buffer ),
+				             "say_team \"%s\"\n",
+										 chatField.buffer );
+			}
+			else {
+				Com_sprintf( buffer, sizeof( buffer ),
+				             "say \"%s\"\n", chatField.buffer );
+			}
 
 			CL_AddReliableCommand( buffer, false );
 		}
@@ -1327,7 +1332,7 @@ static void CL_KeyDownEvent( int key, unsigned time )
 			VM_Call( cls.cgame, CG_KEY_EVENT, key, true );
 		}
 	} else if ( clc.netchan.alternateProtocol == 2 &&
-								( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) {
+			        ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) {
 			Message_Key( key );
 	} else if ( clc.state == CA_DISCONNECTED ) {
 		Console_Key( key );
@@ -1405,6 +1410,10 @@ void CL_CharEvent( int key )
 
 	else if ( Key_GetCatcher( ) & KEYCATCH_UI )
 		VM_Call( cls.ui, UI_KEY_EVENT, key | K_CHAR_FLAG, true );
+
+	else if ( clc.netchan.alternateProtocol == 2 &&
+		        ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) 
+		Field_CharEvent( &chatField, key );
 
 	else if ( clc.state == CA_DISCONNECTED )
 		Field_CharEvent( &g_consoleField, key );

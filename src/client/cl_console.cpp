@@ -343,6 +343,32 @@ void Cmd_CompleteTxtName( char *args UNUSED, int argNum ) {
 	}
 }
 
+/*
+================
+Con_MessageModesInit
+================
+*/
+void Con_MessageModesInit(void) {
+	if( clc.netchan.alternateProtocol == 2 )
+	{
+		// add the client side message modes for 1.1 servers
+		if( !Cmd_CommadExists( "messagemode" ) )
+			Cmd_AddCommand ("messagemode", Con_MessageMode_f);
+		if( !Cmd_CommadExists( "messagemode2" ) )
+			Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
+		if( !Cmd_CommadExists( "messagemode3" ) )
+			Cmd_AddCommand ("messagemode3", Con_MessageMode3_f);
+		if( !Cmd_CommadExists( "messagemode4" ) )
+			Cmd_AddCommand ("messagemode4", Con_MessageMode4_f);
+	} else
+	{
+		// remove the client side message modes for non-1.1 servers
+		Cmd_RemoveCommand("messagemode");
+		Cmd_RemoveCommand("messagemode2");
+		Cmd_RemoveCommand("messagemode3");
+		Cmd_RemoveCommand("messagemode4");
+	}
+}
 
 /*
 ================
@@ -687,33 +713,33 @@ void Con_DrawConsole( void ) {
 		}
 	}
 
+	// draw the chat line
+  if( clc.netchan.alternateProtocol == 2 &&
+      ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) )
+  {
+    int skip;
+
+    if( chat_team )
+    {
+      SCR_DrawBigString( 8, 232, "Team Say:", 1.0f, qfalse );
+      skip = 11;
+    }
+    else
+    {
+      SCR_DrawBigString( 8, 232, "Say:", 1.0f, qfalse );
+      skip = 5;
+    }
+
+    Field_BigDraw( &chatField, skip * BIGCHAR_WIDTH, 232,
+                   SCREEN_WIDTH - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );
+	}
+
 	if ( con.displayFrac ) {
 		Con_DrawSolidConsole( con.displayFrac );
 	}
 
 	if( Key_GetCatcher( ) & ( KEYCATCH_UI | KEYCATCH_CGAME ) )
 		return;
-
-		// draw the chat line
-	  if( clc.netchan.alternateProtocol == 2 &&
-	      Key_GetCatcher( ) & KEYCATCH_MESSAGE )
-	  {
-	    int skip;
-
-	    if( chat_team )
-	    {
-	      SCR_DrawBigString( 8, 232, "Team Say:", 1.0f, qfalse );
-	      skip = 11;
-	    }
-	    else
-	    {
-	      SCR_DrawBigString( 8, 232, "Say:", 1.0f, qfalse );
-	      skip = 5;
-	    }
-
-	    Field_BigDraw( &chatField, skip * BIGCHAR_WIDTH, 232,
-	                   SCREEN_WIDTH - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );
-									 }
 }
 //================================================================
 
