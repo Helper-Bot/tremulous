@@ -775,6 +775,13 @@ static void Message_Key( int key ) {
 
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
 		if ( chatField.buffer[0] && clc.state == CA_ACTIVE ){
+
+			if( chatField.buffer[0] == '/' ||
+					chatField.buffer[0] == '\\' )
+				{
+					Com_sprintf( buffer, sizeof( buffer ), "%s\"\n", &chatField.buffer[1] );
+				}
+
 			if (chat_playerNum != -1 ) {
 				Com_sprintf( buffer, sizeof( buffer ),
 				             "tell %i \"%s\"\n",
@@ -1412,7 +1419,7 @@ void CL_CharEvent( int key )
 		VM_Call( cls.ui, UI_KEY_EVENT, key | K_CHAR_FLAG, true );
 
 	else if ( clc.netchan.alternateProtocol == 2 &&
-		        ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) 
+		        ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) )
 		Field_CharEvent( &chatField, key );
 
 	else if ( clc.state == CA_DISCONNECTED )

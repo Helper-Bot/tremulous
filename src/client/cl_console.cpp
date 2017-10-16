@@ -719,7 +719,14 @@ void Con_DrawConsole( void ) {
   {
     int skip;
 
-    if( chat_team )
+		if( chatField.buffer[0] == '/' ||
+				chatField.buffer[0] == '\\' )
+			{
+				SCR_DrawBigString( 8, 232, "Command:", 1.0f, qfalse);
+				skip = 10;
+			}
+
+    else if( chat_team )
     {
       SCR_DrawBigString( 8, 232, "Team Say:", 1.0f, qfalse );
       skip = 11;
