@@ -722,7 +722,7 @@ void Con_DrawConsole( void ) {
 		if( chatField.buffer[0] == '/' ||
 				chatField.buffer[0] == '\\' )
 			{
-				SCR_DrawBigString( 8, 232, "Command:", 1.0f, qfalse);
+				SCR_DrawBigString( 8, 232, "Command:", 1.0f, qfalse );
 				skip = 10;
 			}
 

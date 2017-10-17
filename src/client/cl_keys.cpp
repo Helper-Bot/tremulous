@@ -779,10 +779,10 @@ static void Message_Key( int key ) {
 			if( chatField.buffer[0] == '/' ||
 					chatField.buffer[0] == '\\' )
 				{
-					Com_sprintf( buffer, sizeof( buffer ), "%s\"\n", &chatField.buffer[1] );
+					Com_sprintf( buffer, sizeof( buffer ), "%s\n", &chatField.buffer[1] );
 				}
 
-			if (chat_playerNum != -1 ) {
+			 else if (chat_playerNum != -1 ) {
 				Com_sprintf( buffer, sizeof( buffer ),
 				             "tell %i \"%s\"\n",
 										 chat_playerNum,
